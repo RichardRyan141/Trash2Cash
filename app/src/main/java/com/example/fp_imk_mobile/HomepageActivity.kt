@@ -1,5 +1,6 @@
 package com.example.fp_imk_mobile
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -21,13 +22,22 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -37,6 +47,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
@@ -61,7 +72,6 @@ fun HomeScreen() {
         modifier = Modifier
             .fillMaxSize()
     ) {
-        // Gradient Header (unchanged)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -94,26 +104,43 @@ fun HomeScreen() {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
-                    Text(
-                        text = "username",
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AccountCircle,
+                        contentDescription = "Profile",
+                        tint = Color.White,
+                        modifier = Modifier.size(48.dp)
                     )
-                    Text(
-                        text = "user@email.com",
-                        fontSize = 16.sp,
-                        color = Color.White
-                    )
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Column {
+                        Text(
+                            text = "username",
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Text(
+                            text = "user@email.com",
+                            fontSize = 16.sp,
+                            color = Color.White
+                        )
+                    }
                 }
 
-                Icon(
-                    imageVector = Icons.Default.Notifications,
-                    contentDescription = "Notifications",
-                    tint = Color.White,
-                    modifier = Modifier.size(32.dp)
-                )
+                IconButton(onClick = {
+                    context.startActivity(Intent(context, NotificationActivity::class.java))
+                }) {
+                    Icon(
+                        imageVector = Icons.Default.Notifications,
+                        contentDescription = "Notifications",
+                        tint = Color.White,
+                        modifier = Modifier.size(45.dp)
+                    )
+                }
             }
         }
 
@@ -173,10 +200,22 @@ fun HomeScreen() {
             }
         }
 
-        // Icons.Default.CompareArrows --> Transfer
-        // Icons.Default.Description / androidx.compose.material.icons.filled.Receipt --> History
-        // Icons.Filled.QrCodeScanner --> QR code
-        // Icons.Default.Map // Icons.Default.NearMe --> Location
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .offset { IntOffset(x = 0, y = (-50).dp.roundToPx()) }
+                .padding(horizontal = 12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                MenuItem(icon = Icons.Default.Send, label = "Transfer")
+                MenuItem(icon = Icons.Default.History, label = "History")
+                MenuItem(icon = Icons.Default.LocationOn, label = "Location")
+            }
+        }
 
         Surface(
             modifier = Modifier
@@ -216,7 +255,101 @@ fun HomeScreen() {
                         )
                     }
                 }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                TransactionItem(
+                    isIncome = true,
+                    date = "13 Mei 2025",
+                    party = "Transfer dari Ayah",
+                    amount = "500.000"
+                )
+                TransactionItem(
+                    isIncome = false,
+                    date = "12 Mei 2025",
+                    party = "Pembayaran Listrik",
+                    amount = "200.000"
+                )
+                TransactionItem(
+                    isIncome = false,
+                    date = "10 Mei 2025",
+                    party = "Belanja Tokopedia",
+                    amount = "350.000"
+                )
             }
         }
+    }
+}
+
+@Composable
+fun MenuItem(icon: ImageVector, label: String) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = label,
+            modifier = Modifier.size(40.dp)
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium
+        )
+    }
+}
+
+@Composable
+fun TransactionItem(
+    isIncome: Boolean,
+    date: String,
+    party: String,
+    amount: String
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Spacer(modifier = Modifier.height(6.dp))
+
+        Icon(
+            imageVector = if (isIncome) Icons.Default.ArrowDownward else Icons.Default.ArrowUpward,
+            contentDescription = if (isIncome) "Income" else "Expense",
+            modifier = Modifier
+                .size(32.dp)
+                .background(
+                    color = if (isIncome) Color(0xFFE0F7E9) else Color(0xFFFFEBEE),
+                    shape = RoundedCornerShape(8.dp)
+                )
+                .padding(4.dp),
+            tint = if (isIncome) Color(0xFF2E7D32) else Color(0xFFC62828)
+        )
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(
+                text = date,
+                fontSize = 12.sp,
+                color = Color.Gray
+            )
+            Text(
+                text = party,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color.Black
+            )
+        }
+
+        Text(
+            text = if (isIncome) "Rp $amount" else "- Rp $amount",
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            color = if (isIncome) Color(0xFF2E7D32) else Color(0xFFC62828)
+        )
+        Spacer(modifier = Modifier.height(6.dp))
     }
 }
