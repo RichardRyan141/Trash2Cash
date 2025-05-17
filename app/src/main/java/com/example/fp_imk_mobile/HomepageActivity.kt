@@ -211,9 +211,9 @@ fun HomeScreen() {
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                MenuItem(icon = Icons.Default.Send, label = "Transfer")
-                MenuItem(icon = Icons.Default.History, label = "History")
-                MenuItem(icon = Icons.Default.LocationOn, label = "Location")
+                MenuItem(icon = Icons.Default.Send, label = "Transfer", menuClass = Transfer1Activity::class.java)
+                MenuItem(icon = Icons.Default.History, label = "History", menuClass = LocationActivity::class.java)
+                MenuItem(icon = Icons.Default.LocationOn, label = "Location", menuClass = LocationActivity::class.java)
             }
         }
 
@@ -282,9 +282,13 @@ fun HomeScreen() {
 }
 
 @Composable
-fun MenuItem(icon: ImageVector, label: String) {
+fun MenuItem(icon: ImageVector, label: String, menuClass: Class<*>) {
+    val context = LocalContext.current
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.clickable {
+            context.startActivity(Intent(context, menuClass))
+        }
     ) {
         Icon(
             imageVector = icon,
@@ -303,7 +307,7 @@ fun TransactionItem(
     isIncome: Boolean,
     date: String,
     party: String,
-    amount: String
+    amount: String,
 ) {
     Row(
         modifier = Modifier
