@@ -33,6 +33,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 class Transfer5Activity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -220,11 +224,16 @@ fun Transfer5Screen(
             Button(
                 onClick = {
                     val intent = Intent(context, DetailTransferActivity::class.java)
-                    intent.putExtra("selectedWallet", selectedWallet)
-                    intent.putExtra("Nama", nama)
-                    intent.putExtra("NoTelp", noTelp)
-                    intent.putExtra("Nominal", nominalStr)
-                    intent.putExtra("Pesan", pesan)
+                    val transfer = Transaction(
+                        false,
+                        SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault()).format(String()),
+                        "Saldo",
+                        "$selectedWallet $noTelp $nama",
+                        nominalStr.toInt(),
+                        pesan,
+                        "0000004"
+                    )
+                    intent.putExtra("transferDetail", transfer)
                     context.startActivity(intent)
 //                    (context as? ComponentActivity)?.finish()
                 },

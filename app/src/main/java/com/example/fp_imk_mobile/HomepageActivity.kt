@@ -19,15 +19,15 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowDownward
-import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Visibility
@@ -62,6 +62,12 @@ class HomepageActivity : ComponentActivity() {
         }
     }
 }
+
+val dummyTransaction = arrayListOf(
+    Transaction(true, "13 Mei 2025 12:00", "Bank Sampah Margorejo", "Saldo", 500000, "Test1", "0000001"),
+    Transaction(false, "12 Mei 2025 10:03", "Saldo", "Gopay 081234567890", 200000, "", "0000002"),
+    Transaction(false, "10 Mei 2025 13:25", "Saldo", "ShopeePay 08957654321", 350000, "", "0000003"),
+)
 
 @Composable
 fun HomeScreen() {
@@ -132,15 +138,26 @@ fun HomeScreen() {
                 }
 
                 IconButton(onClick = {
-                    context.startActivity(Intent(context, NotificationActivity::class.java))
+                    context.startActivity(Intent(context, MainActivity::class.java))
                 }) {
                     Icon(
-                        imageVector = Icons.Default.Notifications,
+                        imageVector = Icons.Default.Logout,
                         contentDescription = "Notifications",
                         tint = Color.White,
                         modifier = Modifier.size(45.dp)
                     )
                 }
+
+//                IconButton(onClick = {
+//                    context.startActivity(Intent(context, NotificationActivity::class.java))
+//                }) {
+//                    Icon(
+//                        imageVector = Icons.Default.Notifications,
+//                        contentDescription = "Notifications",
+//                        tint = Color.White,
+//                        modifier = Modifier.size(45.dp)
+//                    )
+//                }
             }
         }
 
@@ -211,9 +228,9 @@ fun HomeScreen() {
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                MenuItem(icon = Icons.Default.Send, label = "Transfer", menuClass = Transfer1Activity::class.java)
-                MenuItem(icon = Icons.Default.History, label = "History", menuClass = LocationActivity::class.java)
-                MenuItem(icon = Icons.Default.LocationOn, label = "Location", menuClass = LocationActivity::class.java)
+                MenuItem(Icons.Default.Send, "Transfer", Transfer1Activity::class.java, null, "")
+                MenuItem(Icons.Default.History, "History", TransactionHistoryActivity::class.java, dummyTransaction, "transactionList")
+                MenuItem(Icons.Default.LocationOn, "Location", LocationActivity::class.java, null, "")
             }
         }
 
@@ -241,7 +258,11 @@ fun HomeScreen() {
                     )
 
                     Button(
-                        onClick = {  },
+                        onClick = {
+                            val intent = Intent(context, TransactionHistoryActivity::class.java)
+                            intent.putParcelableArrayListExtra("transactionList", ArrayList(dummyTransaction))
+                            context.startActivity(intent)
+                        },
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                         shape = RoundedCornerShape(8.dp)
@@ -258,36 +279,29 @@ fun HomeScreen() {
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                TransactionItem(
-                    isIncome = true,
-                    date = "13 Mei 2025",
-                    party = "Transfer dari Ayah",
-                    amount = "500.000"
-                )
-                TransactionItem(
-                    isIncome = false,
-                    date = "12 Mei 2025",
-                    party = "Pembayaran Listrik",
-                    amount = "200.000"
-                )
-                TransactionItem(
-                    isIncome = false,
-                    date = "10 Mei 2025",
-                    party = "Belanja Tokopedia",
-                    amount = "350.000"
-                )
+                LazyColumn() {
+                    items(dummyTransaction.size) { index ->
+                        TransactionItem(dummyTransaction[index])
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-fun MenuItem(icon: ImageVector, label: String, menuClass: Class<*>) {
+fun MenuItem(icon: ImageVector, label: String, menuClass: Class<*>, data: ArrayList<Transaction>?, tag: String) {
     val context = LocalContext.current
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.clickable {
-            context.startActivity(Intent(context, menuClass))
+            if (tag != "") {
+                val intent = Intent(context, menuClass)
+                intent.putParcelableArrayListExtra(tag, ArrayList(data))
+                context.startActivity(intent)
+            } else {
+                context.startActivity(Intent(context, menuClass))
+            }
         }
     ) {
         Icon(
@@ -299,61 +313,5 @@ fun MenuItem(icon: ImageVector, label: String, menuClass: Class<*>) {
             text = label,
             style = MaterialTheme.typography.bodyMedium
         )
-    }
-}
-
-@Composable
-fun TransactionItem(
-    isIncome: Boolean,
-    date: String,
-    party: String,
-    amount: String,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Spacer(modifier = Modifier.height(6.dp))
-
-        Icon(
-            imageVector = if (isIncome) Icons.Default.ArrowDownward else Icons.Default.ArrowUpward,
-            contentDescription = if (isIncome) "Income" else "Expense",
-            modifier = Modifier
-                .size(32.dp)
-                .background(
-                    color = if (isIncome) Color(0xFFE0F7E9) else Color(0xFFFFEBEE),
-                    shape = RoundedCornerShape(8.dp)
-                )
-                .padding(4.dp),
-            tint = if (isIncome) Color(0xFF2E7D32) else Color(0xFFC62828)
-        )
-
-        Spacer(modifier = Modifier.width(12.dp))
-
-        Column(
-            modifier = Modifier.weight(1f)
-        ) {
-            Text(
-                text = date,
-                fontSize = 12.sp,
-                color = Color.Gray
-            )
-            Text(
-                text = party,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color.Black
-            )
-        }
-
-        Text(
-            text = if (isIncome) "Rp $amount" else "- Rp $amount",
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Bold,
-            color = if (isIncome) Color(0xFF2E7D32) else Color(0xFFC62828)
-        )
-        Spacer(modifier = Modifier.height(6.dp))
     }
 }
