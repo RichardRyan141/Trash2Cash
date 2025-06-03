@@ -3,6 +3,7 @@ package com.example.fp_imk_mobile.forgot_password
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
@@ -47,6 +48,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.fp_imk_mobile.R
 import kotlinx.coroutines.delay
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class ForgotPassword2Activity: ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,7 +66,6 @@ class ForgotPassword2Activity: ComponentActivity() {
 @Composable
 fun OtpInputFields(codeFields: List<MutableState<String>>) {
     val focusRequesters = remember { List(6) { FocusRequester() } }
-    val keyboardController = LocalSoftwareKeyboardController.current
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -101,7 +104,6 @@ fun OtpInputFields(codeFields: List<MutableState<String>>) {
         }
     }
 
-    // Fokus otomatis ke field pertama saat screen muncul
     LaunchedEffect(Unit) {
         focusRequesters.first().requestFocus()
     }
@@ -114,7 +116,6 @@ fun ForgotPassword2Screen(email: String) {
     var timer by remember { mutableStateOf(60) }
     var isResendEnabled by remember { mutableStateOf(false) }
 
-    // Timer countdown
     LaunchedEffect(key1 = timer) {
         if (timer > 0) {
             delay(1000)
@@ -157,9 +158,7 @@ fun ForgotPassword2Screen(email: String) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Input 6 digit kode verifikasi
         OtpInputFields(codeFields)
-
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -167,7 +166,6 @@ fun ForgotPassword2Screen(email: String) {
             onClick = {
                 timer = 60
                 isResendEnabled = false
-                // Trigger resend code logic here
             },
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier.fillMaxWidth(),
@@ -185,8 +183,15 @@ fun ForgotPassword2Screen(email: String) {
         Button(
             onClick = {
                 val code = codeFields.joinToString("") { it.value }
-                if (code.length == 6) {
-                    context.startActivity(Intent(context, ForgotPassword3Activity::class.java))
+                val todayCode = SimpleDateFormat("ddMMyy", Locale.getDefault()).format(Date())
+
+                if (code == todayCode) {
+                    val intent = Intent(context, ForgotPassword3Activity::class.java).apply {
+                        putExtra("email", email)
+                    }
+                    context.startActivity(intent)
+                } else {
+                    Toast.makeText(context, "Incorrect code $code supposed to be $todayCode", Toast.LENGTH_SHORT).show()
                 }
             },
             shape = RoundedCornerShape(16.dp),

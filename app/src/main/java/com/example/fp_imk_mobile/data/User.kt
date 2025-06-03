@@ -16,6 +16,7 @@ data class User(
     val email: String = "",
     val noTelp: String = "",
     val balance: Int = 0,
+    val role: String = "user"
 )
 
 fun getUserData(

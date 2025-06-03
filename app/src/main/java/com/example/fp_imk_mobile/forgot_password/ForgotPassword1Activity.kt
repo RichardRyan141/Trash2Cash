@@ -3,6 +3,7 @@ package com.example.fp_imk_mobile.forgot_password
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
@@ -31,6 +32,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.fp_imk_mobile.R
+import com.google.firebase.database.FirebaseDatabase
 
 class ForgotPassword1Activity: ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -79,10 +81,41 @@ fun ForgotPassword1Screen() {
 
         Button(
             onClick = {
-                val intent = Intent(context, ForgotPassword2Activity::class.java).apply {
-                    putExtra("email", email)
-                }
-                context.startActivity(intent)
+                val database = FirebaseDatabase.getInstance()
+                val usersRef = database.getReference("users")
+
+                usersRef.orderByChild("email").equalTo(email).get()
+                    .addOnSuccessListener { snapshot ->
+                        if (snapshot.exists()) {
+                            val userSnapshot = snapshot.children.first()
+                            val role = userSnapshot.child("role").getValue(String::class.java)
+                            if (role == "user") {
+                                val intent = Intent(context, ForgotPassword2Activity::class.java).apply {
+                                    putExtra("email", email)
+                                }
+                                context.startActivity(intent)
+                            } else {
+                                Toast.makeText(
+                                    context,
+                                    "Hanya pengguna biasa yang dapat menggunakan reset password.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        } else {
+                            Toast.makeText(
+                                context,
+                                "Email tidak ditemukan.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                    .addOnFailureListener {
+                        Toast.makeText(
+                            context,
+                            "Terjadi kesalahan saat memeriksa email.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
             },
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier.fillMaxWidth(),

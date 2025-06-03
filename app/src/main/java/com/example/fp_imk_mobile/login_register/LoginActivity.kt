@@ -26,6 +26,7 @@ import com.example.fp_imk_mobile.forgot_password.ForgotPassword1Activity
 import com.example.fp_imk_mobile.HomepageActivity
 import com.example.fp_imk_mobile.R
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
 
 class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,12 +62,30 @@ fun LoginScreen() {
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    context.startActivity(Intent(context, HomepageActivity::class.java))
+                    val user = auth.currentUser
+                    val uid = user?.uid ?: return@addOnCompleteListener
+                    val dbRef = FirebaseDatabase.getInstance().getReference("users").child(uid)
+
+                    dbRef.get()
+                        .addOnSuccessListener { snapshot ->
+                            val role = snapshot.child("role").getValue(String::class.java)
+                            if (role == "user") {
+                                context.startActivity(Intent(context, HomepageActivity::class.java))
+                            } else {
+                                auth.signOut()
+                                Toast.makeText(context, "Login tidak diizinkan untuk admin di sini", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                        .addOnFailureListener {
+                            auth.signOut()
+                            Toast.makeText(context, "Gagal memverifikasi role pengguna", Toast.LENGTH_SHORT).show()
+                        }
                 } else {
                     Log.e("Login Gagal", "${task.exception?.message}")
                     Toast.makeText(context, "Login gagal: Email atau password salah", Toast.LENGTH_SHORT).show()
                 }
             }
+
     }
 
     Column(

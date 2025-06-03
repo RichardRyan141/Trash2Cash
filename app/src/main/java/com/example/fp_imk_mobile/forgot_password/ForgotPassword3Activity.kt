@@ -41,14 +41,15 @@ import com.example.fp_imk_mobile.login_register.LoginActivity
 class ForgotPassword3Activity: ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val email = intent.getStringExtra("email") ?: "email@example.com"
         setContent {
-            ForgotPassword3Screen()
+            ForgotPassword3Screen(email)
         }
     }
 }
 
 @Composable
-fun ForgotPassword3Screen() {
+fun ForgotPassword3Screen(email: String) {
     val context = LocalContext.current
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
