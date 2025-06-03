@@ -1,4 +1,4 @@
-package com.example.fp_imk_mobile
+package com.example.fp_imk_mobile.transfer
 
 import android.content.Intent
 import android.os.Bundle
@@ -32,6 +32,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.fp_imk_mobile.HomepageActivity
+import com.example.fp_imk_mobile.R
 
 class Transfer1Activity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -46,7 +48,7 @@ class Transfer1Activity : ComponentActivity() {
 @Composable
 fun Transfer1Screen() {
     val context = LocalContext.current
-    val options = listOf("OVO", "DANA", "GoPay", "Shopee Pay")
+    val options = listOf("OVO", "DANA", "GoPay", "ShopeePay")
 
     Column(
         modifier = Modifier
@@ -97,7 +99,7 @@ fun Transfer1Screen() {
                                 val intent = Intent(context, Transfer2Activity::class.java)
                                 intent.putExtra("selectedWallet", option)
                                 context.startActivity(intent)
-                                (context as? ComponentActivity)?.finish()
+//                                (context as? ComponentActivity)?.finish()
                             }
                     ) {
                         Image(
@@ -105,7 +107,7 @@ fun Transfer1Screen() {
                                 "OVO" -> R.drawable.logo_ovo
                                 "DANA" -> R.drawable.logo_dana
                                 "GoPay" -> R.drawable.logo_gopay
-                                "Shopee Pay" -> R.drawable.logo_shopeepay
+                                "ShopeePay" -> R.drawable.logo_shopeepay
                                 else -> R.drawable.ic_launcher_foreground
                             }),
                             contentDescription = "Logo $option",

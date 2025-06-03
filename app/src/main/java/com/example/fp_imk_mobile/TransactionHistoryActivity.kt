@@ -3,7 +3,6 @@ package com.example.fp_imk_mobile
 import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.widget.DatePicker
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -18,7 +17,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -45,6 +43,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.fp_imk_mobile.data.Transaction
 import java.util.Calendar
 
 class TransactionHistoryActivity : ComponentActivity() {
@@ -89,6 +88,12 @@ fun TransactionHistoryScreen(transactionList: List<Transaction>) {
         calendar.get(Calendar.DAY_OF_MONTH)
     )
 
+    val filteredTransactions = remember(transactionList, masukChecked, keluarChecked) {
+        transactionList.filter { transaction ->
+            (masukChecked && transaction.masuk) || (keluarChecked && !transaction.masuk)
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -125,47 +130,47 @@ fun TransactionHistoryScreen(transactionList: List<Transaction>) {
                 .verticalScroll(rememberScrollState())
                 .background(Color(0xFFF0F0F0))
         ) {
-            Text(
-                text = "Filter Tanggal",
-                color = Color.Black,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(top = 12.dp, start = 12.dp)
-            )
-
-            Row(modifier = Modifier.padding(top = 12.dp)) {
-                Box(
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .border(1.dp, Color.Gray, RoundedCornerShape(12.dp))
-                        .background(Color.White, RoundedCornerShape(12.dp))
-                        .padding(8.dp)
-                ) {
-                    TextButton(onClick = { startDatePickerDialog.show() }) {
-                        Text(
-                            text = if (startDate.isEmpty()) "Pilih Tanggal Awal" else "Awal: $startDate",
-                            fontSize = 14.sp
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Box(
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .border(1.dp, Color.Gray, RoundedCornerShape(12.dp))
-                        .background(Color.White, RoundedCornerShape(12.dp))
-                        .padding(8.dp)
-                ) {
-                    TextButton(onClick = { endDatePickerDialog.show() }) {
-                        Text(
-                            text = if (endDate.isEmpty()) "Pilih Tanggal Akhir" else "Akhir: $endDate",
-                            fontSize = 14.sp
-                        )
-                    }
-                }
-            }
+//            Text(
+//                text = "Filter Tanggal",
+//                color = Color.Black,
+//                fontSize = 24.sp,
+//                fontWeight = FontWeight.SemiBold,
+//                modifier = Modifier.padding(top = 12.dp, start = 12.dp)
+//            )
+//
+//            Row(modifier = Modifier.padding(top = 12.dp)) {
+//                Box(
+//                    modifier = Modifier
+//                        .padding(16.dp)
+//                        .border(1.dp, Color.Gray, RoundedCornerShape(12.dp))
+//                        .background(Color.White, RoundedCornerShape(12.dp))
+//                        .padding(8.dp)
+//                ) {
+//                    TextButton(onClick = { startDatePickerDialog.show() }) {
+//                        Text(
+//                            text = if (startDate.isEmpty()) "Pilih Tanggal Awal" else "Awal: $startDate",
+//                            fontSize = 14.sp
+//                        )
+//                    }
+//                }
+//
+//                Spacer(modifier = Modifier.width(8.dp))
+//
+//                Box(
+//                    modifier = Modifier
+//                        .padding(16.dp)
+//                        .border(1.dp, Color.Gray, RoundedCornerShape(12.dp))
+//                        .background(Color.White, RoundedCornerShape(12.dp))
+//                        .padding(8.dp)
+//                ) {
+//                    TextButton(onClick = { endDatePickerDialog.show() }) {
+//                        Text(
+//                            text = if (endDate.isEmpty()) "Pilih Tanggal Akhir" else "Akhir: $endDate",
+//                            fontSize = 14.sp
+//                        )
+//                    }
+//                }
+//            }
 
             Text(
                 text = "Jenis Transaksi",
@@ -227,18 +232,20 @@ fun TransactionHistoryScreen(transactionList: List<Transaction>) {
                     .background(Color.White, RoundedCornerShape(12.dp))
                     .padding(16.dp)
             ) {
-                Column {
-                    transactionList.forEachIndexed { index, transaction ->
-                        TransactionItem(
-                            transaction
-                        )
+                if (filteredTransactions.isEmpty()) {
+                    Text("Tidak ada transaksi yang sesuai filter.", color = Color.Gray)
+                } else {
+                    Column {
+                        filteredTransactions.forEachIndexed { index, transaction ->
+                            TransactionItem(transaction)
 
-                        if (index < transactionList.size - 1) {
-                            Divider(
-                                color = Color.LightGray,
-                                thickness = 1.dp,
-                                modifier = Modifier.padding(horizontal = 16.dp)
-                            )
+                            if (index < filteredTransactions.size - 1) {
+                                Divider(
+                                    color = Color.LightGray,
+                                    thickness = 1.dp,
+                                    modifier = Modifier.padding(horizontal = 16.dp)
+                                )
+                            }
                         }
                     }
                 }

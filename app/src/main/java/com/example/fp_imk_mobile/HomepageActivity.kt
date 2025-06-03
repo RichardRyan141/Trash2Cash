@@ -2,6 +2,7 @@ package com.example.fp_imk_mobile
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -20,15 +21,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Logout
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -40,6 +40,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -53,6 +55,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.fp_imk_mobile.data.Transaction
+import com.example.fp_imk_mobile.data.User
+import com.example.fp_imk_mobile.data.getUserData
+import com.example.fp_imk_mobile.data.getUserTransactionList
+import com.example.fp_imk_mobile.transfer.Transfer1Activity
+import com.google.firebase.auth.FirebaseAuth
+import java.text.NumberFormat
+import java.util.Locale
+
 
 class HomepageActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,15 +75,58 @@ class HomepageActivity : ComponentActivity() {
 }
 
 val dummyTransaction = arrayListOf(
-    Transaction(true, "13 Mei 2025 12:00", "Bank Sampah Margorejo", "Saldo", 500000, "Test1", "0000001"),
-    Transaction(false, "12 Mei 2025 10:03", "Saldo", "Gopay 081234567890", 200000, "", "0000002"),
-    Transaction(false, "10 Mei 2025 13:25", "Saldo", "ShopeePay 08957654321", 350000, "", "0000003"),
+    Transaction(true, "13 Mei 2025 12:00", "Bank Sampah Margorejo", "Saldo", 500000, "Test1", "dummy", "0000001"),
+    Transaction(false, "12 Mei 2025 10:03", "Saldo", "GoPay 081234567890 Alpha", 200000, "", "dummy", "0000002"),
+    Transaction(false, "10 Mei 2025 13:25", "Saldo", "ShopeePay 08957654321 Beta U", 350000, "", "dummy", "0000003"),
 )
 
 @Composable
 fun HomeScreen() {
     val context = LocalContext.current
     val isBalanceVisible = remember { mutableStateOf(true) }
+
+    val auth = FirebaseAuth.getInstance()
+    val user = auth.currentUser
+    val uid = user?.uid
+
+    val userData = remember { mutableStateOf<User?>(null) }
+
+    val transactions = remember { mutableStateListOf<Transaction>() }
+    val errorMessage = remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(uid) {
+        if (uid != null) {
+            getUserTransactionList(
+                user_id = uid,
+                onSuccess = { fetchedTransactions ->
+                    transactions.clear()
+                    transactions.addAll(fetchedTransactions)
+                    if (transactions.isEmpty()) {
+                        transactions.addAll(dummyTransaction)
+                    }
+                },
+                onError = { error ->
+                    errorMessage.value = error.message
+                    transactions.clear()
+                    transactions.addAll(dummyTransaction)
+                }
+            )
+
+            getUserData(
+                uid = uid,
+                onSuccess = { user ->
+                    userData.value = user
+                    user?.username?.let { username ->
+                        saveStringLocally(context, "username", username)
+                    }
+                },
+                onError = { error ->
+                    Log.e("Firebase", "Failed to load user data", error)
+                }
+            )
+        }
+    }
+
 
     Column(
         modifier = Modifier
@@ -124,13 +178,13 @@ fun HomeScreen() {
 
                     Column {
                         Text(
-                            text = "username",
+                            text = userData.value?.let {it.username} ?: "username",
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
                         )
                         Text(
-                            text = "user@email.com",
+                            text = userData.value?.let {it.email} ?: "user@email.com",
                             fontSize = 16.sp,
                             color = Color.White
                         )
@@ -142,22 +196,11 @@ fun HomeScreen() {
                 }) {
                     Icon(
                         imageVector = Icons.Default.Logout,
-                        contentDescription = "Notifications",
+                        contentDescription = "Logout",
                         tint = Color.White,
                         modifier = Modifier.size(45.dp)
                     )
                 }
-
-//                IconButton(onClick = {
-//                    context.startActivity(Intent(context, NotificationActivity::class.java))
-//                }) {
-//                    Icon(
-//                        imageVector = Icons.Default.Notifications,
-//                        contentDescription = "Notifications",
-//                        tint = Color.White,
-//                        modifier = Modifier.size(45.dp)
-//                    )
-//                }
             }
         }
 
@@ -196,7 +239,12 @@ fun HomeScreen() {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = if (isBalanceVisible.value) "Rp 1.500.000" else "••••••••",
+                            text = if (isBalanceVisible.value)
+                                        userData.value?.let {
+                                            "Rp ${NumberFormat.getNumberInstance(Locale("in", "ID")).format(it.balance)}"
+                                        } ?: "Loading..."
+                                   else
+                                       "••••••••",
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.Black
@@ -260,7 +308,7 @@ fun HomeScreen() {
                     Button(
                         onClick = {
                             val intent = Intent(context, TransactionHistoryActivity::class.java)
-                            intent.putParcelableArrayListExtra("transactionList", ArrayList(dummyTransaction))
+                            intent.putParcelableArrayListExtra("transactionList", ArrayList(transactions))
                             context.startActivity(intent)
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
@@ -280,8 +328,8 @@ fun HomeScreen() {
                 Spacer(modifier = Modifier.height(10.dp))
 
                 LazyColumn() {
-                    items(dummyTransaction.size) { index ->
-                        TransactionItem(dummyTransaction[index])
+                    items(transactions.take(5)) { transaction ->
+                        TransactionItem(transaction)
                     }
                 }
             }

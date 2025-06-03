@@ -2,6 +2,7 @@ package com.example.fp_imk_mobile
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -23,11 +24,16 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
+import com.example.fp_imk_mobile.login_register.LoginActivity
+import com.example.fp_imk_mobile.login_register.RegisterActivity
+import com.google.firebase.FirebaseApp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        FirebaseApp.initializeApp(this)
         setContent {
             MainScreen()
         }
@@ -37,6 +43,16 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainScreen() {
     val context = LocalContext.current
+    val database = FirebaseDatabase.getInstance()
+    val usersRef = database.getReference("users")
+
+    usersRef.get()
+        .addOnSuccessListener {
+            Log.d("FirebaseTest", "Fetched users: ${it.childrenCount}")
+        }
+        .addOnFailureListener {
+            Log.e("FirebaseTest", "Simple query failed", it)
+        }
 
     Box(
         modifier = Modifier

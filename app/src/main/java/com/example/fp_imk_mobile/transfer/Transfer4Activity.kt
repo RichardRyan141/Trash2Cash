@@ -1,7 +1,9 @@
-package com.example.fp_imk_mobile
+package com.example.fp_imk_mobile.transfer
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
@@ -20,7 +22,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -29,7 +30,9 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -41,24 +44,62 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.fp_imk_mobile.R
+import com.example.fp_imk_mobile.data.Transaction
+import com.example.fp_imk_mobile.data.User
+import com.example.fp_imk_mobile.data.getUserData
+import com.example.fp_imk_mobile.data.getUserTransactionList
+import com.example.fp_imk_mobile.dummyTransaction
+import com.example.fp_imk_mobile.saveStringLocally
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
 
-class Transfer3Activity : ComponentActivity() {
+class Transfer4Activity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val selectedWallet = intent.getStringExtra("selectedWallet") ?: "Unknown"
+        var nama = intent.getStringExtra("Nama") ?: ""
+        var noTelp = intent.getStringExtra("NoTelp") ?: ""
 
         setContent {
-            Transfer3Screen(selectedWallet)
+            Transfer4Screen(selectedWallet, nama, noTelp)
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Transfer3Screen(selectedWallet: String) {
+fun Transfer4Screen(selectedWallet: String, nama: String, noTelp: String) {
     val context = LocalContext.current
-    var nama by remember { mutableStateOf("") }
-    var noTelp by remember { mutableStateOf("") }
+    var nominal by remember { mutableStateOf("") }
+    var pesan by remember { mutableStateOf("") }
+
+    fun fetchBalanceAndConfirm(onResult: (Boolean) -> Unit) {
+        val auth = FirebaseAuth.getInstance()
+        val uid = auth.currentUser?.uid ?: ""
+        if (uid.isEmpty()) {
+            Toast.makeText(context, "User not logged in", Toast.LENGTH_SHORT).show()
+            onResult(false)
+            return
+        }
+
+        val dbRef = FirebaseDatabase.getInstance().getReference("users").child(uid).child("balance")
+        dbRef.get().addOnSuccessListener { snapshot ->
+            val balance = snapshot.getValue(Long::class.java) ?: 0L
+            val transferAmount = nominal.toLongOrNull() ?: 0L
+
+            if (transferAmount <= balance) {
+                onResult(true)
+            } else {
+                Toast.makeText(context, "Saldo tidak mencukupi", Toast.LENGTH_SHORT).show()
+                onResult(false)
+            }
+        }.addOnFailureListener {
+            Toast.makeText(context, "Gagal mengambil saldo", Toast.LENGTH_SHORT).show()
+            onResult(false)
+        }
+    }
+
 
     Column(
         modifier = Modifier
@@ -74,22 +115,32 @@ fun Transfer3Screen(selectedWallet: String) {
                                 "OVO" -> R.drawable.logo_ovo
                                 "DANA" -> R.drawable.logo_dana
                                 "GoPay" -> R.drawable.logo_gopay
-                                "Shopee Pay" -> R.drawable.logo_shopeepay
+                                "ShopeePay" -> R.drawable.logo_shopeepay
                                 else -> R.drawable.ic_launcher_foreground
                             }
                         ),
                         contentDescription = "Logo $selectedWallet",
                         modifier = Modifier
                             .padding(end = 12.dp)
-                            .size(32.dp)
+                            .size(48.dp)
                     )
 
-                    Text(
-                        text = selectedWallet,
-                        color = Color.Black,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    Column(
+                        modifier = Modifier.padding(4.dp)
+                    ) {
+                        Text(
+                            text = nama,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
+
+                        Text(
+                            text = noTelp,
+                            color = Color.Black,
+                            fontSize = 16.sp
+                        )
+                    }
                 }
             },
             navigationIcon = {
@@ -116,27 +167,27 @@ fun Transfer3Screen(selectedWallet: String) {
             Column(
                 modifier = Modifier
                     .padding(16.dp)
+                    .fillMaxWidth() // only fill width, not height
             ) {
                 OutlinedTextField(
-                    value = nama,
-                    onValueChange = { nama = it },
-                    label = { Text("Masukkan nama yang akan disimpan") },
+                    value = nominal,
+                    onValueChange = { input ->
+                        nominal = input.filter { it.isDigit() }
+                    },
+                    label = { Text("Masukkan nominal transfer") },
                     singleLine = true,
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        keyboardType = KeyboardType.Number
+                    ),
                     modifier = Modifier.fillMaxWidth()
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
 
                 OutlinedTextField(
-                    value = noTelp,
-                    onValueChange = { input ->
-                        noTelp = input.filter { it.isDigit() }
-                    },
-                    label = { Text("Masukkan nomor HP") },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions.Default.copy(
-                        keyboardType = KeyboardType.Number
-                    ),
+                    value = pesan,
+                    onValueChange = { pesan = it },
+                    label = { Text("Masukkan pesan (opsional)") },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -151,12 +202,17 @@ fun Transfer3Screen(selectedWallet: String) {
         ) {
             Button(
                 onClick = {
-                    val intent = Intent(context, Transfer4Activity::class.java)
-                    intent.putExtra("selectedWallet", selectedWallet)
-                    intent.putExtra("Nama", nama)
-                    intent.putExtra("NoTelp", noTelp)
-                    context.startActivity(intent)
-//                    (context as? ComponentActivity)?.finish()
+                    fetchBalanceAndConfirm { isSufficient ->
+                        if (isSufficient) {
+                            val intent = Intent(context, Transfer5Activity::class.java)
+                            intent.putExtra("selectedWallet", selectedWallet)
+                            intent.putExtra("Nama", nama)
+                            intent.putExtra("NoTelp", noTelp)
+                            intent.putExtra("Nominal", nominal)
+                            intent.putExtra("Pesan", pesan)
+                            context.startActivity(intent)
+                        }
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()

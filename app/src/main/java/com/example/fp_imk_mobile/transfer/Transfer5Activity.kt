@@ -1,7 +1,8 @@
-package com.example.fp_imk_mobile
+package com.example.fp_imk_mobile.transfer
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
@@ -33,10 +34,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Date
-import java.util.Locale
+import com.example.fp_imk_mobile.R
+import com.example.fp_imk_mobile.data.Transaction
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
 
 class Transfer5Activity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,6 +66,47 @@ fun Transfer5Screen(
 ) {
     var context = LocalContext.current
     val nominal = nominalStr.toIntOrNull() ?: 0
+    lateinit var transactionRef: DatabaseReference
+
+    fun addTransaction(onComplete: () -> Unit) {
+        val auth = FirebaseAuth.getInstance()
+        val uid = auth.currentUser?.uid ?: return
+        val database = FirebaseDatabase.getInstance()
+        val userRef = database.getReference("users").child(uid)
+        transactionRef = database.getReference("transactions").child(uid).push()
+
+        userRef.child("balance").get().addOnSuccessListener { snapshot ->
+            val currentBalance = snapshot.getValue(Int::class.java) ?: 0
+
+            if (currentBalance < nominal) {
+                Toast.makeText(context, "Saldo tidak cukup", Toast.LENGTH_SHORT).show()
+                return@addOnSuccessListener
+            }
+
+            val updatedBalance = currentBalance - nominal
+            userRef.child("balance").setValue(updatedBalance)
+
+            val transfer = Transaction(
+                masuk = false,
+                sumber = "Saldo",
+                tujuan = "$selectedWallet $noTelp $nama",
+                nominal = nominal,
+                pesan = pesan,
+                user_id = uid,
+                noRef = transactionRef.key ?: ""
+            )
+
+            transactionRef.setValue(transfer).addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    onComplete()
+                } else {
+                    Toast.makeText(context, "Gagal menyimpan transaksi", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }.addOnFailureListener {
+            Toast.makeText(context, "Gagal mengambil data saldo", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -125,7 +168,7 @@ fun Transfer5Screen(
                                     "OVO" -> R.drawable.logo_ovo
                                     "DANA" -> R.drawable.logo_dana
                                     "GoPay" -> R.drawable.logo_gopay
-                                    "Shopee Pay" -> R.drawable.logo_shopeepay
+                                    "ShopeePay" -> R.drawable.logo_shopeepay
                                     else -> R.drawable.ic_launcher_foreground
                                 }
                             ),
@@ -223,19 +266,21 @@ fun Transfer5Screen(
         ) {
             Button(
                 onClick = {
-                    val intent = Intent(context, DetailTransferActivity::class.java)
-                    val transfer = Transaction(
-                        false,
-                        SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault()).format(String()),
-                        "Saldo",
-                        "$selectedWallet $noTelp $nama",
-                        nominalStr.toInt(),
-                        pesan,
-                        "0000004"
-                    )
-                    intent.putExtra("transferDetail", transfer)
-                    context.startActivity(intent)
-//                    (context as? ComponentActivity)?.finish()
+                    addTransaction {
+                        val intent = Intent(context, DetailTransferActivity::class.java)
+                        val transfer = Transaction(
+                            masuk = false,
+                            sumber = "Saldo",
+                            tujuan = "$selectedWallet $noTelp $nama",
+                            nominal = nominalStr.toInt(),
+                            pesan = pesan,
+                            user_id = "", // Fill this if needed
+                            noRef = transactionRef.key ?: ""
+                        )
+                        intent.putExtra("transferDetail", transfer)
+                        context.startActivity(intent)
+                        // (context as? ComponentActivity)?.finish()
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()

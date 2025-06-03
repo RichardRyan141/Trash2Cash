@@ -1,4 +1,4 @@
-package com.example.fp_imk_mobile
+package com.example.fp_imk_mobile.top_up
 
 import android.content.Intent
 import android.os.Bundle
@@ -33,6 +33,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.fp_imk_mobile.HomepageActivity
+import com.example.fp_imk_mobile.data.Transaction
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -40,7 +42,15 @@ import java.util.Locale
 class DetailTopUpActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        var transfer = intent.getParcelableExtra<Transaction>("topUpDetail") ?: Transaction(true, "", "", "", -1, "", "")
+        var transfer = intent.getParcelableExtra<Transaction>("topUpDetail") ?: Transaction(
+            true,
+            "",
+            "",
+            "",
+            -1,
+            "",
+            ""
+        )
 
         setContent {
             DetailTopUpScreen(transfer)
@@ -91,8 +101,7 @@ fun DetailTopUpScreen(
             },
             navigationIcon = {
                 IconButton(onClick = {
-                    val intent = Intent(context, HomepageActivity::class.java)
-                    context.startActivity(intent)
+                    (context as? ComponentActivity)?.finish()
                 }) {
                     Icon(
                         imageVector = Icons.Default.ArrowBack,

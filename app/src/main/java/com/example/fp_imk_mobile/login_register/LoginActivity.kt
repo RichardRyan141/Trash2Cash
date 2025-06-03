@@ -1,12 +1,17 @@
-package com.example.fp_imk_mobile
+package com.example.fp_imk_mobile.login_register
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -17,6 +22,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.sp
+import com.example.fp_imk_mobile.forgot_password.ForgotPassword1Activity
+import com.example.fp_imk_mobile.HomepageActivity
+import com.example.fp_imk_mobile.R
+import com.google.firebase.auth.FirebaseAuth
 
 class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,6 +42,32 @@ fun LoginScreen() {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+
+
+    fun isFormValid(): Boolean {
+        val passwordValid = password.length >= 8 && password.any { it.isDigit() }
+        val fieldsFilled = email.isNotBlank() && password.isNotBlank()
+        return fieldsFilled && passwordValid
+    }
+
+    fun loginUser() {
+        if(!isFormValid()) {
+            Toast.makeText(context, "Email dan password harus diisi", Toast.LENGTH_SHORT).show()
+            return;
+        }
+
+        val auth = FirebaseAuth.getInstance()
+
+        auth.signInWithEmailAndPassword(email, password)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    context.startActivity(Intent(context, HomepageActivity::class.java))
+                } else {
+                    Log.e("Login Gagal", "${task.exception?.message}")
+                    Toast.makeText(context, "Login gagal: Email atau password salah", Toast.LENGTH_SHORT).show()
+                }
+            }
+    }
 
     Column(
         modifier = Modifier
@@ -69,10 +104,10 @@ fun LoginScreen() {
             singleLine = true,
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
-                val icon = if (passwordVisible) "🙈" else "👁"
-                Text(
-                    text = icon,
-                    fontSize = 18.sp,
+                val icon = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
                     modifier = Modifier
                         .clickable { passwordVisible = !passwordVisible }
                         .padding(end = 8.dp)
@@ -99,9 +134,10 @@ fun LoginScreen() {
 
         Button(
             onClick = {
-                context.startActivity(Intent(context, HomepageActivity::class.java))
+                loginUser()
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            enabled = isFormValid()
         ) {
             Text("Login")
         }

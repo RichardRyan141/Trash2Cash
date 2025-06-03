@@ -1,5 +1,6 @@
-package com.example.fp_imk_mobile
+package com.example.fp_imk_mobile.forgot_password
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -25,6 +26,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -43,6 +45,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.fp_imk_mobile.R
+import kotlinx.coroutines.delay
 
 class ForgotPassword2Activity: ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -113,7 +117,7 @@ fun ForgotPassword2Screen(email: String) {
     // Timer countdown
     LaunchedEffect(key1 = timer) {
         if (timer > 0) {
-            kotlinx.coroutines.delay(1000)
+            delay(1000)
             timer -= 1
         } else {
             isResendEnabled = true
@@ -127,7 +131,7 @@ fun ForgotPassword2Screen(email: String) {
             .fillMaxSize()
             .padding(horizontal = 24.dp),
         verticalArrangement = Arrangement.Bottom,
-        horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
             text = "Kode telah dikirimkan ke",
@@ -199,7 +203,7 @@ fun ForgotPassword2Screen(email: String) {
 
         Button(
             onClick = {
-                (context as? android.app.Activity)?.finish()
+                (context as? Activity)?.finish()
             },
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier.fillMaxWidth(),

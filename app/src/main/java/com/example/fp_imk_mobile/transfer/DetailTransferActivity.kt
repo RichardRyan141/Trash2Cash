@@ -1,4 +1,4 @@
-package com.example.fp_imk_mobile
+package com.example.fp_imk_mobile.transfer
 
 import android.content.Intent
 import android.os.Bundle
@@ -33,6 +33,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.fp_imk_mobile.HomepageActivity
+import com.example.fp_imk_mobile.R
+import com.example.fp_imk_mobile.data.Transaction
+import com.example.fp_imk_mobile.getStringLocally
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -40,11 +44,20 @@ import java.util.Locale
 class DetailTransferActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        var transfer = intent.getParcelableExtra<Transaction>("transferDetail") ?: Transaction(false, "", "", "", 0, "", "")
-        var username = "Unknown"
+        var transfer = intent.getParcelableExtra<Transaction>("transferDetail") ?: Transaction(
+            false,
+            "",
+            "",
+            "",
+            0,
+            "",
+            ""
+        )
+        val username = getStringLocally(this, "username") ?: "Unknown"
+        var from = intent.getStringExtra("from") ?: ""
 
         setContent {
-            DetailTransferScreen(transfer, username)
+            DetailTransferScreen(transfer, username, from)
         }
     }
 }
@@ -53,7 +66,8 @@ class DetailTransferActivity : ComponentActivity() {
 @Composable
 fun DetailTransferScreen(
     transfer: Transaction,
-    username: String
+    username: String,
+    from: String
 ) {
     val selectedWallet = transfer.tujuan.split(' ')[0]
     val noTelp = transfer.tujuan.split(' ')[1]
@@ -88,8 +102,13 @@ fun DetailTransferScreen(
             },
             navigationIcon = {
                 IconButton(onClick = {
-                    val intent = Intent(context, HomepageActivity::class.java)
-                    context.startActivity(intent)
+                    if (from == "TransferHistory") {
+                        (context as? ComponentActivity)?.finish()
+                    } else {
+                        val intent = Intent(context, HomepageActivity::class.java)
+                        context.startActivity(intent)
+                        (context as? ComponentActivity)?.finish()
+                    }
                 }) {
                     Icon(
                         imageVector = Icons.Default.ArrowBack,
@@ -177,7 +196,7 @@ fun DetailTransferScreen(
                                     "OVO" -> R.drawable.logo_ovo
                                     "DANA" -> R.drawable.logo_dana
                                     "GoPay" -> R.drawable.logo_gopay
-                                    "Shopee Pay" -> R.drawable.logo_shopeepay
+                                    "ShopeePay" -> R.drawable.logo_shopeepay
                                     else -> R.drawable.ic_launcher_foreground
                                 }
                             ),

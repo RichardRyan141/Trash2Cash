@@ -1,5 +1,6 @@
 package com.example.fp_imk_mobile
 
+import android.content.Context
 import android.content.Intent
 import android.os.Parcelable
 import androidx.compose.foundation.background
@@ -26,20 +27,24 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.fp_imk_mobile.data.Transaction
+import com.example.fp_imk_mobile.top_up.DetailTopUpActivity
+import com.example.fp_imk_mobile.transfer.DetailTransferActivity
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import kotlinx.android.parcel.Parcelize
-import java.text.SimpleDateFormat
-import java.util.Locale
 
-@Parcelize
-data class Transaction(
-    val masuk: Boolean,
-    val waktu: String,
-    val sumber: String,
-    val tujuan: String,
-    val nominal: Int,
-    val pesan: String,
-    val noRef: String
-) : Parcelable
+fun saveStringLocally(context: Context, tag: String, str: String) {
+    val prefs = context.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
+    prefs.edit().putString(tag, str).apply()
+}
+
+fun getStringLocally(context: Context, tag: String): String? {
+    val prefs = context.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
+    return prefs.getString(tag, null)
+}
 
 @Composable
 fun TransactionItem(
@@ -63,6 +68,7 @@ fun TransactionItem(
                 } else {
                     val intent = Intent(context, DetailTransferActivity::class.java)
                     intent.putExtra("transferDetail", transaction)
+                    intent.putExtra("from", "TransferHistory")
                     context.startActivity(intent)
                 }
             },

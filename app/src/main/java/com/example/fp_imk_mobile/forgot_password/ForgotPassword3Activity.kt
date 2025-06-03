@@ -1,44 +1,59 @@
-package com.example.fp_imk_mobile
+package com.example.fp_imk_mobile.forgot_password
 
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.*
-import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults.buttonColors
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.fp_imk_mobile.R
+import com.example.fp_imk_mobile.login_register.LoginActivity
 
-class RegisterActivity : ComponentActivity() {
+class ForgotPassword3Activity: ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            RegisterScreen()
+            ForgotPassword3Screen()
         }
     }
 }
 
 @Composable
-fun RegisterScreen() {
+fun ForgotPassword3Screen() {
     val context = LocalContext.current
-    var username by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPassword by remember { mutableStateOf("") }
     var confirmPasswordVisible by remember{ mutableStateOf(false) }
-    var tosChecked by remember { mutableStateOf(false) }
-    var privacyChecked by remember { mutableStateOf(false) }
-
 
     Column(
         modifier = Modifier
@@ -48,37 +63,38 @@ fun RegisterScreen() {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Image(
-            painter = painterResource(id = R.drawable.app_logo),
-            contentDescription = null,
-            modifier = Modifier.size(100.dp),
-            contentScale = ContentScale.Crop
+            painter = painterResource(id = R.drawable.key),
+            contentDescription = "App Logo",
+            modifier = Modifier
+                .height(120.dp)
         )
 
-        Spacer(modifier = Modifier.height(50.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
-        OutlinedTextField(
-            value = username,
-            onValueChange = { username = it },
-            label = { Text("Masukkan Username") },
-            singleLine = true,
+        Text(
+            text = "Password Baru",
+            fontSize = 24.sp,
+            textAlign = TextAlign.Center,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 4.dp)
+                .padding(vertical = 16.dp)
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
-        OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("Masukkan Email") },
-            singleLine = true,
+        Text(
+            text = "Masukkan password baru anda",
+            fontSize = 16.sp,
+            textAlign = TextAlign.Center,
+            color = Color.Black,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 4.dp)
+                .padding(vertical = 16.dp)
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         OutlinedTextField(
             value = password,
@@ -126,49 +142,20 @@ fun RegisterScreen() {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Checkbox(
-                checked = tosChecked,
-                onCheckedChange = { tosChecked = it }
-            )
-            Text("Saya menyetujui Ketentuan Layanan")
-        }
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Checkbox(
-                checked = privacyChecked,
-                onCheckedChange = { privacyChecked = it }
-            )
-            Text("Saya menyetujui Kebijakan Privasi")
-        }
-
-        Spacer(modifier = Modifier.height(32.dp))
-
         Button(
             onClick = {
-                context.startActivity(Intent(context, HomepageActivity::class.java))
+                context.startActivity(Intent(context, LoginActivity::class.java))
             },
-            modifier = Modifier.fillMaxWidth()
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth(),
+            colors = buttonColors(
+                containerColor = colorResource(id = R.color.green),
+                contentColor = Color.White
+            )
         ) {
-            Text("Register")
+            Text("Submit")
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Text(
-            text = "atau Masuk ke akun yang dimiliki?",
-            modifier = Modifier
-                .clickable {
-                    context.startActivity(Intent(context, LoginActivity::class.java))
-                }
-        )
-
-        Spacer(modifier = Modifier.height(48.dp))
+        Spacer(modifier = Modifier.height(200.dp))
     }
 }

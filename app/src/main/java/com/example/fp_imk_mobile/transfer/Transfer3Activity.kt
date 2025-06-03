@@ -1,4 +1,4 @@
-package com.example.fp_imk_mobile
+package com.example.fp_imk_mobile.transfer
 
 import android.content.Intent
 import android.os.Bundle
@@ -40,26 +40,25 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.fp_imk_mobile.R
 
-class Transfer4Activity : ComponentActivity() {
+class Transfer3Activity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val selectedWallet = intent.getStringExtra("selectedWallet") ?: "Unknown"
-        var nama = intent.getStringExtra("Nama") ?: ""
-        var noTelp = intent.getStringExtra("NoTelp") ?: ""
 
         setContent {
-            Transfer4Screen(selectedWallet, nama, noTelp)
+            Transfer3Screen(selectedWallet)
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Transfer4Screen(selectedWallet: String, nama: String, noTelp: String) {
+fun Transfer3Screen(selectedWallet: String) {
     val context = LocalContext.current
-    var nominal by remember { mutableStateOf("") }
-    var pesan by remember { mutableStateOf("") }
+    var nama by remember { mutableStateOf("") }
+    var noTelp by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
@@ -75,32 +74,22 @@ fun Transfer4Screen(selectedWallet: String, nama: String, noTelp: String) {
                                 "OVO" -> R.drawable.logo_ovo
                                 "DANA" -> R.drawable.logo_dana
                                 "GoPay" -> R.drawable.logo_gopay
-                                "Shopee Pay" -> R.drawable.logo_shopeepay
+                                "ShopeePay" -> R.drawable.logo_shopeepay
                                 else -> R.drawable.ic_launcher_foreground
                             }
                         ),
                         contentDescription = "Logo $selectedWallet",
                         modifier = Modifier
                             .padding(end = 12.dp)
-                            .size(48.dp)
+                            .size(32.dp)
                     )
 
-                    Column(
-                        modifier = Modifier.padding(4.dp)
-                    ) {
-                        Text(
-                            text = nama,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.padding(bottom = 4.dp)
-                        )
-
-                        Text(
-                            text = noTelp,
-                            color = Color.Black,
-                            fontSize = 16.sp
-                        )
-                    }
+                    Text(
+                        text = selectedWallet,
+                        color = Color.Black,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
             },
             navigationIcon = {
@@ -127,27 +116,27 @@ fun Transfer4Screen(selectedWallet: String, nama: String, noTelp: String) {
             Column(
                 modifier = Modifier
                     .padding(16.dp)
-                    .fillMaxWidth() // only fill width, not height
             ) {
                 OutlinedTextField(
-                    value = nominal,
-                    onValueChange = { input ->
-                        nominal = input.filter { it.isDigit() }
-                    },
-                    label = { Text("Masukkan nominal transfer") },
+                    value = nama,
+                    onValueChange = { nama = it },
+                    label = { Text("Masukkan nama yang akan disimpan") },
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions.Default.copy(
-                        keyboardType = KeyboardType.Number
-                    ),
                     modifier = Modifier.fillMaxWidth()
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
 
                 OutlinedTextField(
-                    value = pesan,
-                    onValueChange = { pesan = it },
-                    label = { Text("Masukkan pesan (opsional)") },
+                    value = noTelp,
+                    onValueChange = { input ->
+                        noTelp = input.filter { it.isDigit() }
+                    },
+                    label = { Text("Masukkan nomor HP") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        keyboardType = KeyboardType.Number
+                    ),
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -162,12 +151,10 @@ fun Transfer4Screen(selectedWallet: String, nama: String, noTelp: String) {
         ) {
             Button(
                 onClick = {
-                    val intent = Intent(context, Transfer5Activity::class.java)
+                    val intent = Intent(context, Transfer4Activity::class.java)
                     intent.putExtra("selectedWallet", selectedWallet)
                     intent.putExtra("Nama", nama)
                     intent.putExtra("NoTelp", noTelp)
-                    intent.putExtra("Nominal", nominal)
-                    intent.putExtra("Pesan", pesan)
                     context.startActivity(intent)
 //                    (context as? ComponentActivity)?.finish()
                 },

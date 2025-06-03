@@ -1,4 +1,4 @@
-package com.example.fp_imk_mobile
+package com.example.fp_imk_mobile.transfer
 
 import android.content.Intent
 import android.os.Bundle
@@ -17,13 +17,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowDownward
-import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -39,6 +35,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.fp_imk_mobile.R
 
 class Transfer2Activity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -79,7 +76,7 @@ fun Transfer2Screen(selectedWallet: String) {
                                 "OVO" -> R.drawable.logo_ovo
                                 "DANA" -> R.drawable.logo_dana
                                 "GoPay" -> R.drawable.logo_gopay
-                                "Shopee Pay" -> R.drawable.logo_shopeepay
+                                "ShopeePay" -> R.drawable.logo_shopeepay
                                 else -> R.drawable.ic_launcher_foreground
                             }
                         ),
@@ -220,7 +217,7 @@ fun AccountItem(
                     "OVO" -> R.drawable.logo_ovo
                     "DANA" -> R.drawable.logo_dana
                     "GoPay" -> R.drawable.logo_gopay
-                    "Shopee Pay" -> R.drawable.logo_shopeepay
+                    "ShopeePay" -> R.drawable.logo_shopeepay
                     else -> R.drawable.ic_launcher_foreground
                 }
             ),
