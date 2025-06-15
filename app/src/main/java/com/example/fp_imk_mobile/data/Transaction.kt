@@ -24,32 +24,6 @@ data class Transaction(
 
 
 fun getCurrentTimestamp(): String {
-    val formatter = SimpleDateFormat("dd MMM yyyy HH:mm:ss", Locale.getDefault())
+    val formatter = SimpleDateFormat("dd MMM yyyy HH:mm", Locale.getDefault())
     return formatter.format(Date())
-}
-
-fun getUserTransactionList(
-    user_id: String,
-    onSuccess: (List<Transaction>) -> Unit,
-    onError: (DatabaseError) -> Unit
-) {
-    val dbRef = FirebaseDatabase.getInstance().getReference("transactions")
-
-    dbRef.orderByChild("user_id").equalTo(user_id)
-        .addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val list = mutableListOf<Transaction>()
-                for (child in snapshot.children) {
-                    val transaction = child.getValue(Transaction::class.java)
-                    if (transaction != null) {
-                        list.add(transaction)
-                    }
-                }
-                onSuccess(list)
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                onError(error)
-            }
-        })
 }

@@ -2,7 +2,6 @@ package com.example.fp_imk_mobile.transfer
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -30,9 +29,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -45,12 +42,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.fp_imk_mobile.R
-import com.example.fp_imk_mobile.data.Transaction
+import com.example.fp_imk_mobile.UserSessionManager
 import com.example.fp_imk_mobile.data.User
-import com.example.fp_imk_mobile.data.getUserData
-import com.example.fp_imk_mobile.data.getUserTransactionList
-import com.example.fp_imk_mobile.dummyTransaction
-import com.example.fp_imk_mobile.saveStringLocally
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 
@@ -73,6 +66,7 @@ fun Transfer4Screen(selectedWallet: String, nama: String, noTelp: String) {
     val context = LocalContext.current
     var nominal by remember { mutableStateOf("") }
     var pesan by remember { mutableStateOf("") }
+    var user by remember {mutableStateOf<User?>(null)}
 
     fun fetchBalanceAndConfirm(onResult: (Boolean) -> Unit) {
         val auth = FirebaseAuth.getInstance()
@@ -83,19 +77,21 @@ fun Transfer4Screen(selectedWallet: String, nama: String, noTelp: String) {
             return
         }
 
-        val dbRef = FirebaseDatabase.getInstance().getReference("users").child(uid).child("balance")
-        dbRef.get().addOnSuccessListener { snapshot ->
-            val balance = snapshot.getValue(Long::class.java) ?: 0L
-            val transferAmount = nominal.toLongOrNull() ?: 0L
-
-            if (transferAmount <= balance) {
-                onResult(true)
-            } else {
-                Toast.makeText(context, "Saldo tidak mencukupi", Toast.LENGTH_SHORT).show()
-                onResult(false)
+        UserSessionManager.getUserData(uid) { fetchedUser ->
+            if (fetchedUser != null) {
+                user = fetchedUser
             }
-        }.addOnFailureListener {
-            Toast.makeText(context, "Gagal mengambil saldo", Toast.LENGTH_SHORT).show()
+        }
+        if (user == null){
+            Toast.makeText(context, "Gagal mengambil saldo user", Toast.LENGTH_SHORT).show()
+            onResult(false)
+            return;
+        }
+        val transferAmount = nominal.toLongOrNull() ?: 0L
+        if (transferAmount <= user!!.balance) {
+            onResult(true)
+        } else {
+            Toast.makeText(context, "Saldo tidak mencukupi", Toast.LENGTH_SHORT).show()
             onResult(false)
         }
     }

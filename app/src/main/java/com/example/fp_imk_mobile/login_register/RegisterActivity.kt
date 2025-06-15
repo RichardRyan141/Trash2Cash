@@ -24,6 +24,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.sp
 import com.example.fp_imk_mobile.HomepageActivity
 import com.example.fp_imk_mobile.R
+import com.example.fp_imk_mobile.UserSessionManager
 import com.example.fp_imk_mobile.data.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
@@ -59,51 +60,19 @@ fun RegisterScreen() {
     }
 
     fun registerUser() {
-        val database = FirebaseDatabase.getInstance()
-        val auth = FirebaseAuth.getInstance()
-        val usersRef = database.getReference("users")
-
-        if (!isFormValid()) {
-            Toast.makeText(context, "Lengkapi semua data dan ceklis persetujuan", Toast.LENGTH_SHORT).show()
-            return
+        val user = User(
+            username = username,
+            email = email,
+            noTelp = noTelp,
+        )
+        UserSessionManager.registerUser(user = user, password = password) { success, message ->
+            if (success) {
+                Toast.makeText(context, "Registrasi berhasil!", Toast.LENGTH_SHORT).show()
+                context.startActivity(Intent(context, HomepageActivity::class.java))
+            } else {
+                Toast.makeText(context, message ?: "Registrasi gagal", Toast.LENGTH_LONG).show()
+            }
         }
-
-        usersRef.orderByChild("noTelp").equalTo(noTelp).get()
-            .addOnSuccessListener { snapshot ->
-                if (snapshot.exists()) {
-                    Toast.makeText(context, "Nomor telepon sudah digunakan", Toast.LENGTH_SHORT).show()
-                } else {
-                    auth.createUserWithEmailAndPassword(email, password)
-                        .addOnCompleteListener { task ->
-                            if (task.isSuccessful) {
-                                val firebaseUser = auth.currentUser
-                                val uid = firebaseUser?.uid ?: return@addOnCompleteListener
-                                val user = User(
-                                    username = username,
-                                    email = email,
-                                    noTelp = noTelp,
-                                    balance = 0
-                                )
-
-                                usersRef.child(uid).setValue(user)
-                                    .addOnSuccessListener {
-                                        Toast.makeText(context, "Registrasi berhasil!", Toast.LENGTH_SHORT).show()
-                                        context.startActivity(Intent(context, HomepageActivity::class.java))
-                                    }
-                                    .addOnFailureListener {
-                                        Toast.makeText(context, "Gagal menyimpan data user", Toast.LENGTH_SHORT).show()
-                                    }
-                            } else {
-                                Log.d("Registrasi gagal", "${task.exception?.message}")
-                                Toast.makeText(context, "Registrasi gagal: ${task.exception?.message}", Toast.LENGTH_LONG).show()
-                            }
-                        }
-                }
-            }
-            .addOnFailureListener { e ->
-                Log.e("FirebaseQuery", "Query failed", e)
-                Toast.makeText(context, "Gagal memeriksa nomor telepon: ${e.message}", Toast.LENGTH_LONG).show()
-            }
     }
 
     Column(
@@ -171,9 +140,9 @@ fun RegisterScreen() {
                 .fillMaxWidth()
                 .padding(top = 4.dp)
         )
-        if (!noTelp.isNotBlank()) {
+        if (!noTelp.isNotBlank() || noTelp.length < 10) {
             Text(
-                text = "Masukkan Nomor Telepon",
+                text = "Masukkan Nomor Telepon (min. 10 digit)",
                 color = MaterialTheme.colorScheme.error,
                 fontSize = 12.sp,
                 modifier = Modifier.padding(top = 4.dp)
@@ -220,12 +189,12 @@ fun RegisterScreen() {
             singleLine = true,
             visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
-                val icon = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
+                val icon = if (confirmPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
                     modifier = Modifier
-                        .clickable { passwordVisible = !passwordVisible }
+                        .clickable { confirmPasswordVisible = !confirmPasswordVisible }
                         .padding(end = 8.dp)
                 )
             },

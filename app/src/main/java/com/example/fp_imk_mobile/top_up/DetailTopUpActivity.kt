@@ -42,15 +42,7 @@ import java.util.Locale
 class DetailTopUpActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        var transfer = intent.getParcelableExtra<Transaction>("topUpDetail") ?: Transaction(
-            true,
-            "",
-            "",
-            "",
-            -1,
-            "",
-            ""
-        )
+        var transfer = intent.getParcelableExtra<Transaction>("topUpDetail") ?: Transaction(nominal=-1)
 
         setContent {
             DetailTopUpScreen(transfer)
@@ -58,19 +50,17 @@ class DetailTopUpActivity : ComponentActivity() {
     }
 }
 
-data class Kategori(val nama: String, val berat: Double, val hargaPerKG: Int)
+data class detailTransaksi(val nama: String, val berat: Double, val hargaPerKG: Int)
 
 val dummyKategori = listOf(
-    Kategori("kategori 1", 5.0, 2500),
-    Kategori("kategori 2", 2.0, 1500),
-    Kategori("kategori 3", 3.0, 4000)
+    detailTransaksi("kategori 1", 5.0, 2500),
+    detailTransaksi("kategori 2", 2.0, 1500),
+    detailTransaksi("kategori 3", 3.0, 4000)
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetailTopUpScreen(
-    transfer: Transaction,
-) {
+fun DetailTopUpScreen(transfer: Transaction) {
     val sumber = transfer.sumber
     val nominal = transfer.nominal
     val waktu = transfer.waktu
@@ -197,7 +187,7 @@ fun DetailTopUpScreen(
 }
 
 @Composable
-fun KategoriTable(kategoriList: List<Kategori>) {
+fun KategoriTable(kategoriList: List<detailTransaksi>) {
     val total = kategoriList.sumOf { it.berat * it.hargaPerKG }
 
     Column(

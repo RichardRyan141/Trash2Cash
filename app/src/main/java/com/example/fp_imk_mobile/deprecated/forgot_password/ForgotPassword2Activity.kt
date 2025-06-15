@@ -1,4 +1,4 @@
-package com.example.fp_imk_mobile.forgot_password
+package com.example.fp_imk_mobile.deprecated.forgot_password
 
 import android.app.Activity
 import android.content.Intent
@@ -39,7 +39,6 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType

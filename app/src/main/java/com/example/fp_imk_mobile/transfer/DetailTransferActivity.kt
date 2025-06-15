@@ -35,8 +35,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.fp_imk_mobile.HomepageActivity
 import com.example.fp_imk_mobile.R
+import com.example.fp_imk_mobile.UserSessionManager.loggedInUser
 import com.example.fp_imk_mobile.data.Transaction
-import com.example.fp_imk_mobile.getStringLocally
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -53,7 +53,7 @@ class DetailTransferActivity : ComponentActivity() {
             "",
             ""
         )
-        val username = getStringLocally(this, "username") ?: "Unknown"
+        val username = loggedInUser?.username ?: "Unknown"
         var from = intent.getStringExtra("from") ?: ""
 
         setContent {

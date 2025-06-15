@@ -1,4 +1,4 @@
-package com.example.fp_imk_mobile.forgot_password
+package com.example.fp_imk_mobile.deprecated.forgot_password
 
 import android.app.Activity
 import android.content.Intent

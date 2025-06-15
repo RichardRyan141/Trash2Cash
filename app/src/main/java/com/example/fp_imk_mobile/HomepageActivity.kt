@@ -41,9 +41,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -57,8 +59,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.fp_imk_mobile.data.Transaction
 import com.example.fp_imk_mobile.data.User
-import com.example.fp_imk_mobile.data.getUserData
-import com.example.fp_imk_mobile.data.getUserTransactionList
 import com.example.fp_imk_mobile.transfer.Transfer1Activity
 import com.google.firebase.auth.FirebaseAuth
 import java.text.NumberFormat
@@ -86,24 +86,21 @@ fun HomeScreen() {
     val isBalanceVisible = remember { mutableStateOf(true) }
 
     val auth = FirebaseAuth.getInstance()
-    val user = auth.currentUser
-    val uid = user?.uid
+    val uid = auth.currentUser?.uid
 
-    val userData = remember { mutableStateOf<User?>(null) }
+    var user by remember {mutableStateOf<User?>(null)}
 
     val transactions = remember { mutableStateListOf<Transaction>() }
     val errorMessage = remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(uid) {
         if (uid != null) {
-            getUserTransactionList(
+            TransactionSessionManager.getUserTransactionList(
                 user_id = uid,
                 onSuccess = { fetchedTransactions ->
                     transactions.clear()
                     transactions.addAll(fetchedTransactions)
-                    if (transactions.isEmpty()) {
-                        transactions.addAll(dummyTransaction)
-                    }
+                    transactions.addAll(dummyTransaction)
                 },
                 onError = { error ->
                     errorMessage.value = error.message
@@ -112,18 +109,11 @@ fun HomeScreen() {
                 }
             )
 
-            getUserData(
-                uid = uid,
-                onSuccess = { user ->
-                    userData.value = user
-                    user?.username?.let { username ->
-                        saveStringLocally(context, "username", username)
-                    }
-                },
-                onError = { error ->
-                    Log.e("Firebase", "Failed to load user data", error)
+            UserSessionManager.getUserData(uid) { fetchedUser ->
+                if (fetchedUser != null) {
+                    user = fetchedUser
                 }
-            )
+            }
         }
     }
 
@@ -178,13 +168,13 @@ fun HomeScreen() {
 
                     Column {
                         Text(
-                            text = userData.value?.let {it.username} ?: "username",
+                            text = user?.username ?: "username",
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
                         )
                         Text(
-                            text = userData.value?.let {it.email} ?: "user@email.com",
+                            text = user?.email ?: "user@email.com",
                             fontSize = 16.sp,
                             color = Color.White
                         )
@@ -240,9 +230,7 @@ fun HomeScreen() {
                     ) {
                         Text(
                             text = if (isBalanceVisible.value)
-                                        userData.value?.let {
-                                            "Rp ${NumberFormat.getNumberInstance(Locale("in", "ID")).format(it.balance)}"
-                                        } ?: "Loading..."
+                                            "Rp ${NumberFormat.getNumberInstance(Locale("in", "ID")).format(user?.balance)}" ?: "Loading..."
                                    else
                                        "••••••••",
                             fontSize = 24.sp,
@@ -277,7 +265,7 @@ fun HomeScreen() {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 MenuItem(Icons.Default.Send, "Transfer", Transfer1Activity::class.java, null, "")
-                MenuItem(Icons.Default.History, "History", TransactionHistoryActivity::class.java, dummyTransaction, "transactionList")
+                MenuItem(Icons.Default.History, "History", TransactionHistoryActivity::class.java, ArrayList(transactions), "transactionList")
                 MenuItem(Icons.Default.LocationOn, "Location", LocationActivity::class.java, null, "")
             }
         }

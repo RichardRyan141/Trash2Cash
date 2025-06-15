@@ -49,7 +49,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".forgot_password.ForgotPassword1Activity"
+            android:name=".deprecated.forgot_password.ForgotPassword1Activity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.FP_IMK_Mobile">
@@ -60,7 +60,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".forgot_password.ForgotPassword2Activity"
+            android:name=".deprecated.forgot_password.ForgotPassword2Activity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.FP_IMK_Mobile">
@@ -71,7 +71,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".forgot_password.ForgotPassword3Activity"
+            android:name=".deprecated.forgot_password.ForgotPassword3Activity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.FP_IMK_Mobile">
@@ -107,7 +107,8 @@
             android:name=".LocationActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.FP_IMK_Mobile">
+            android:theme="@style/Theme.FP_IMK_Mobile"
+            android:hardwareAccelerated="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

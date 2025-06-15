@@ -21,10 +21,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.sp
-import com.example.fp_imk_mobile.forgot_password.ForgotPassword1Activity
 import com.example.fp_imk_mobile.HomepageActivity
 import com.example.fp_imk_mobile.R
+import com.example.fp_imk_mobile.UserSessionManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 
@@ -52,40 +51,13 @@ fun LoginScreen() {
     }
 
     fun loginUser() {
-        if(!isFormValid()) {
-            Toast.makeText(context, "Email dan password harus diisi", Toast.LENGTH_SHORT).show()
-            return;
-        }
-
-        val auth = FirebaseAuth.getInstance()
-
-        auth.signInWithEmailAndPassword(email, password)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val user = auth.currentUser
-                    val uid = user?.uid ?: return@addOnCompleteListener
-                    val dbRef = FirebaseDatabase.getInstance().getReference("users").child(uid)
-
-                    dbRef.get()
-                        .addOnSuccessListener { snapshot ->
-                            val role = snapshot.child("role").getValue(String::class.java)
-                            if (role == "user") {
-                                context.startActivity(Intent(context, HomepageActivity::class.java))
-                            } else {
-                                auth.signOut()
-                                Toast.makeText(context, "Login tidak diizinkan untuk admin di sini", Toast.LENGTH_SHORT).show()
-                            }
-                        }
-                        .addOnFailureListener {
-                            auth.signOut()
-                            Toast.makeText(context, "Gagal memverifikasi role pengguna", Toast.LENGTH_SHORT).show()
-                        }
-                } else {
-                    Log.e("Login Gagal", "${task.exception?.message}")
-                    Toast.makeText(context, "Login gagal: Email atau password salah", Toast.LENGTH_SHORT).show()
-                }
+        UserSessionManager.login(email, password) { success, errorMessage ->
+            if (success) {
+                context.startActivity(Intent(context, HomepageActivity::class.java))
+            } else {
+                Toast.makeText(context, errorMessage ?: "Login gagal", Toast.LENGTH_SHORT).show()
             }
-
+        }
     }
 
     Column(
@@ -139,15 +111,15 @@ fun LoginScreen() {
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Text(
-            text = "Lupa Password?",
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier
-                .align(Alignment.Start)
-                .clickable {
-                    context.startActivity(Intent(context, ForgotPassword1Activity::class.java))
-                }
-        )
+//        Text(
+//            text = "Lupa Password?",
+//            color = MaterialTheme.colorScheme.primary,
+//            modifier = Modifier
+//                .align(Alignment.Start)
+//                .clickable {
+//                    context.startActivity(Intent(context, ForgotPassword1Activity::class.java))
+//                }
+//        )
 
         Spacer(modifier = Modifier.height(32.dp))
 

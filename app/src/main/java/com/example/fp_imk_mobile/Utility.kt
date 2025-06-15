@@ -30,26 +30,9 @@ import androidx.compose.ui.unit.sp
 import com.example.fp_imk_mobile.data.Transaction
 import com.example.fp_imk_mobile.top_up.DetailTopUpActivity
 import com.example.fp_imk_mobile.transfer.DetailTransferActivity
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
-import kotlinx.android.parcel.Parcelize
-
-fun saveStringLocally(context: Context, tag: String, str: String) {
-    val prefs = context.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
-    prefs.edit().putString(tag, str).apply()
-}
-
-fun getStringLocally(context: Context, tag: String): String? {
-    val prefs = context.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE)
-    return prefs.getString(tag, null)
-}
 
 @Composable
-fun TransactionItem(
-    transaction: Transaction,
-) {
+fun TransactionItem(transaction: Transaction) {
     val context = LocalContext.current
     val isIncome = transaction.masuk
     val tanggal = transaction.waktu

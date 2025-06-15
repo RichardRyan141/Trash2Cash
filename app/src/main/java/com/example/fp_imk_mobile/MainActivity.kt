@@ -43,16 +43,6 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainScreen() {
     val context = LocalContext.current
-    val database = FirebaseDatabase.getInstance()
-    val usersRef = database.getReference("users")
-
-    usersRef.get()
-        .addOnSuccessListener {
-            Log.d("FirebaseTest", "Fetched users: ${it.childrenCount}")
-        }
-        .addOnFailureListener {
-            Log.e("FirebaseTest", "Simple query failed", it)
-        }
 
     Box(
         modifier = Modifier

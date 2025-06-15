@@ -29,7 +29,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -44,7 +43,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.fp_imk_mobile.data.Transaction
+import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Locale
 
 class TransactionHistoryActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -88,10 +89,13 @@ fun TransactionHistoryScreen(transactionList: List<Transaction>) {
         calendar.get(Calendar.DAY_OF_MONTH)
     )
 
+    val sdf = SimpleDateFormat("dd MM yyyy HH:mm", Locale.getDefault())
     val filteredTransactions = remember(transactionList, masukChecked, keluarChecked) {
-        transactionList.filter { transaction ->
-            (masukChecked && transaction.masuk) || (keluarChecked && !transaction.masuk)
-        }
+        transactionList
+            .filter { transaction ->
+                (masukChecked && transaction.masuk) || (keluarChecked && !transaction.masuk)
+            }
+            .sortedByDescending { sdf.parse(it.waktu) }
     }
 
     Scaffold(
