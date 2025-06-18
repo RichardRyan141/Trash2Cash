@@ -89,7 +89,7 @@ fun TransactionHistoryScreen(transactionList: List<Transaction>) {
         calendar.get(Calendar.DAY_OF_MONTH)
     )
 
-    val sdf = SimpleDateFormat("dd MM yyyy HH:mm", Locale.getDefault())
+    val sdf = SimpleDateFormat("dd MMM yyyy HH:mm", Locale.getDefault())
     val filteredTransactions = remember(transactionList, masukChecked, keluarChecked) {
         transactionList
             .filter { transaction ->

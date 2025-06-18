@@ -2,6 +2,7 @@ package com.example.fp_imk_mobile.top_up
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -25,6 +26,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -33,11 +39,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.fp_imk_mobile.CategorySessionManager
 import com.example.fp_imk_mobile.HomepageActivity
+import com.example.fp_imk_mobile.TransactionSessionManager
+import com.example.fp_imk_mobile.data.Category
 import com.example.fp_imk_mobile.data.Transaction
+import com.example.fp_imk_mobile.data.TransactionDetail
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.math.round
 
 class DetailTopUpActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,17 +61,15 @@ class DetailTopUpActivity : ComponentActivity() {
     }
 }
 
-data class detailTransaksi(val nama: String, val berat: Double, val hargaPerKG: Int)
-
-val dummyKategori = listOf(
-    detailTransaksi("kategori 1", 5.0, 2500),
-    detailTransaksi("kategori 2", 2.0, 1500),
-    detailTransaksi("kategori 3", 3.0, 4000)
-)
+data class displayDetailTransaksi(val nama: String, val berat: Double, val hargaPerKG: Int)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailTopUpScreen(transfer: Transaction) {
+    var allCategories by remember { mutableStateOf<List<Category>>(emptyList()) }
+    var addedDetails by remember { mutableStateOf<List<TransactionDetail>>(emptyList()) }
+    var displayDetails by remember { mutableStateOf<List<displayDetailTransaksi>>(emptyList()) }
+
     val sumber = transfer.sumber
     val nominal = transfer.nominal
     val waktu = transfer.waktu
@@ -72,6 +81,32 @@ fun DetailTopUpScreen(transfer: Transaction) {
     } else {
         val formatter = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault())
         formatter.format(Date())
+    }
+
+    LaunchedEffect(transfer.noRef) {
+        CategorySessionManager.getCategoryList (
+            onSuccess = { allCategories = it },
+            onError = { error -> Log.e("FirebaseError", "Error fetching categories", error.toException())}
+        )
+        TransactionSessionManager.getDetailsFor(transfer.noRef) {
+            addedDetails = it
+            displayDetails = listOf()
+
+            for (item in addedDetails) {
+                val matchedCategory = allCategories.find { it.id == item.category_id }
+
+                if (matchedCategory != null) {
+                    displayDetails = displayDetails + displayDetailTransaksi(
+                        nama = matchedCategory.namaKategori,
+                        berat = item.berat,
+                        hargaPerKG = matchedCategory.hargaPerKg
+                    )
+                } else {
+                    Log.w("DataWarning", "Category with ID ${item.category_id} not found")
+                }
+            }
+
+        }
     }
 
     Column(
@@ -158,7 +193,7 @@ fun DetailTopUpScreen(transfer: Transaction) {
             }
         }
 
-        KategoriTable(dummyKategori)
+        KategoriTable(displayDetails)
 
         Column(
             modifier = Modifier
@@ -187,7 +222,7 @@ fun DetailTopUpScreen(transfer: Transaction) {
 }
 
 @Composable
-fun KategoriTable(kategoriList: List<detailTransaksi>) {
+fun KategoriTable(kategoriList: List<displayDetailTransaksi>) {
     val total = kategoriList.sumOf { it.berat * it.hargaPerKG }
 
     Column(

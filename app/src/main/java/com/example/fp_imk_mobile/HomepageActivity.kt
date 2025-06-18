@@ -1,10 +1,12 @@
 package com.example.fp_imk_mobile
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -62,10 +64,14 @@ import com.example.fp_imk_mobile.data.User
 import com.example.fp_imk_mobile.transfer.Transfer1Activity
 import com.google.firebase.auth.FirebaseAuth
 import java.text.NumberFormat
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 
 class HomepageActivity : ComponentActivity() {
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -74,12 +80,7 @@ class HomepageActivity : ComponentActivity() {
     }
 }
 
-val dummyTransaction = arrayListOf(
-    Transaction(true, "13 Mei 2025 12:00", "Bank Sampah Margorejo", "Saldo", 500000, "Test1", "dummy", "0000001"),
-    Transaction(false, "12 Mei 2025 10:03", "Saldo", "GoPay 081234567890 Alpha", 200000, "", "dummy", "0000002"),
-    Transaction(false, "10 Mei 2025 13:25", "Saldo", "ShopeePay 08957654321 Beta U", 350000, "", "dummy", "0000003"),
-)
-
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun HomeScreen() {
     val context = LocalContext.current
@@ -88,30 +89,51 @@ fun HomeScreen() {
     val auth = FirebaseAuth.getInstance()
     val uid = auth.currentUser?.uid
 
-    var user = UserSessionManager.loggedInUser
+    var user by remember { mutableStateOf<User?>(null)}
 
     val transactions = remember { mutableStateListOf<Transaction>() }
     val errorMessage = remember { mutableStateOf<String?>(null) }
+    val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm:ss")
+
 
     LaunchedEffect(uid) {
         if (uid != null) {
+            UserSessionManager.getUserData(uid, onResult = { fetchedUser ->
+                user = fetchedUser
+                Log.d("User", "$user")
+            })
             TransactionSessionManager.getUserTransactionList(
                 user_id = uid,
                 onSuccess = { fetchedTransactions ->
+                    Log.d("TransactionList", "$fetchedTransactions")
                     transactions.clear()
-                    transactions.addAll(fetchedTransactions)
-                    transactions.addAll(dummyTransaction)
+                    transactions.addAll(
+                        fetchedTransactions.sortedByDescending {
+                            LocalDateTime.parse(it.waktu, formatter)
+                        }
+                    )
+
+//                    transactions.addAll(dummyTransaction)
                 },
                 onError = { error ->
-                    errorMessage.value = error.message
+                    errorMessage.value = error
                     transactions.clear()
-                    transactions.addAll(dummyTransaction)
+//                    transactions.addAll(dummyTransaction)
                 }
             )
         }
     }
 
+    if(user != null) {
+        homeScreenContent(user!!,transactions)
+    }
 
+}
+
+@Composable
+fun homeScreenContent(user:User, transactions:List<Transaction>) {
+    val context = LocalContext.current
+    val isBalanceVisible = remember { mutableStateOf(true) }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -176,6 +198,7 @@ fun HomeScreen() {
                 }
 
                 IconButton(onClick = {
+                    UserSessionManager.logout()
                     context.startActivity(Intent(context, MainActivity::class.java))
                 }) {
                     Icon(
@@ -224,9 +247,9 @@ fun HomeScreen() {
                     ) {
                         Text(
                             text = if (isBalanceVisible.value)
-                                            "Rp ${NumberFormat.getNumberInstance(Locale("in", "ID")).format(user?.balance)}" ?: "Loading..."
-                                   else
-                                       "••••••••",
+                                "Rp ${NumberFormat.getNumberInstance(Locale("in", "ID")).format(user?.balance)}" ?: "Loading..."
+                            else
+                                "••••••••",
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.Black

@@ -3,6 +3,7 @@ package com.example.fp_imk_mobile
 import android.content.Context
 import android.content.Intent
 import android.os.Parcelable
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -33,6 +34,7 @@ import com.example.fp_imk_mobile.transfer.DetailTransferActivity
 
 @Composable
 fun TransactionItem(transaction: Transaction) {
+    Log.d("TransactionItem", "$transaction")
     val context = LocalContext.current
     val isIncome = transaction.masuk
     val tanggal = transaction.waktu

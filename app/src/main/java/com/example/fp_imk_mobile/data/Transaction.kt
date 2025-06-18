@@ -20,6 +20,6 @@ data class Transaction(
 
 
 fun getCurrentTimestamp(): String {
-    val formatter = SimpleDateFormat("dd MMM yyyy HH:mm", Locale.getDefault())
+    val formatter = SimpleDateFormat("dd MMM yyyy HH:mm:ss", Locale.getDefault())
     return formatter.format(Date())
 }

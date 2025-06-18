@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.fp_imk_mobile.R
 import com.example.fp_imk_mobile.TransactionSessionManager
+import com.example.fp_imk_mobile.UserSessionManager
 import com.example.fp_imk_mobile.data.Transaction
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
@@ -82,10 +83,19 @@ fun Transfer5Screen(
         )
         TransactionSessionManager.addTransaction(transfer) { success, message, transferID ->
             if (success) {
-                val transfer = transfer.copy(noRef = transferID!!)
-                val intent = Intent(context, DetailTransferActivity::class.java)
-                intent.putExtra("transferDetail", transfer)
-                context.startActivity(intent)
+                var user = UserSessionManager.loggedInUser
+                val updatedUser = user!!.copy(balance=user.balance-nominal)
+                UserSessionManager.editUser(updatedUser, onResult = { success, message ->
+                    if (success) {
+                        val transfer = transfer.copy(noRef = transferID!!)
+                        val intent = Intent(context, DetailTransferActivity::class.java)
+                        intent.putExtra("transferDetail", transfer)
+                        context.startActivity(intent)
+                    }
+                    else {
+                        Toast.makeText(context, message ?: "Terjadi kesalahan", Toast.LENGTH_LONG).show()
+                    }
+                })
             } else {
                 Toast.makeText(context, message ?: "Terjadi kesalahan", Toast.LENGTH_LONG).show()
             }

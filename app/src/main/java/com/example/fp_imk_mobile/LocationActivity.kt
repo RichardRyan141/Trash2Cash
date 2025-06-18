@@ -3,6 +3,7 @@ package com.example.fp_imk_mobile
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.os.Bundle
+import android.util.Log
 import android.view.ViewGroup
 import android.webkit.WebChromeClient
 import android.webkit.WebView
@@ -20,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -29,36 +31,46 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
-
-data class MarkerInfo(val lat: Double, val lng: Double, val label: String, val address: String)
-val locations = listOf(
-    MarkerInfo(51.505, -0.09, "Marker 1", "Alamat 1"),
-    MarkerInfo(51.515, -0.1, "Marker 2", "Alamat 2"),
-    MarkerInfo(51.525, -0.08, "Marker 3", "Alamat 3"),
-    MarkerInfo(51.555, -0.18, "Marker 4", "Alamat 4")
-)
+import com.example.fp_imk_mobile.data.Location
 
 class LocationActivity : ComponentActivity() {
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        val locationsState = mutableStateListOf<Location>()
+        val isLoaded = mutableStateOf(false)
+
+        LocationSessionManager.getAllLocations(
+            onSuccess = { locList ->
+                locationsState.clear()
+                locationsState.addAll(locList)
+                isLoaded.value = true
+                Log.d("LocationScreen", "Locations: $locList")
+            },
+            onError = { error ->
+                Log.e("LocationScreen", "Database error: ${error.message}")
+                isLoaded.value = true
+            }
+        )
+
         setContent {
-            LocationScreen()
+            if (isLoaded.value && locationsState.isNotEmpty()) {
+                ListLocationScreen(locationsState)
+            }
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LocationScreen() {
+fun ListLocationScreen(locations: SnapshotStateList<Location>) {
     val context = LocalContext.current
     val webViewRef = remember { mutableStateOf<WebView?>(null) }
-    var selectedMarker by remember { mutableStateOf<MarkerInfo?>(null) }
+    var selectedMarker by remember { mutableStateOf<Location?>(null) }
     val listState = rememberLazyListState()
     var showDialog by remember { mutableStateOf(false) }
-    var selectedInfo by remember { mutableStateOf<MarkerInfo?>(null) }
-
+    var selectedInfo by remember { mutableStateOf<Location?>(null) }
 
     LaunchedEffect(selectedMarker) {
         val index = locations.indexOf(selectedMarker)
@@ -68,44 +80,46 @@ fun LocationScreen() {
     }
 
     val html = remember(locations) {
+        if (locations.isEmpty()) return@remember null  // return null if not ready
+
         val jsArray = locations.joinToString(",") {
-            "[${it.lat}, ${it.lng}, '${it.label}']"
+            "[${it.lat}, ${it.long}, '${it.namaLokasi}']"
         }
 
         """
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-          <style>
-            html, body, #map { height: 100%; margin: 0; padding: 0; }
-          </style>
-        </head>
-        <body>
-          <div id="map"></div>
-          <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-          <script>
-            var map = L.map('map').setView([${locations.first().lat}, ${locations.first().lng}], 13);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-              attribution: '&copy; OpenStreetMap contributors'
-            }).addTo(map);
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+      <style>
+        html, body, #map { height: 100%; margin: 0; padding: 0; }
+      </style>
+    </head>
+    <body>
+      <div id="map"></div>
+      <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+      <script>
+        var map = L.map('map').setView([${locations.first().lat}, ${locations.first().long}], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
 
-            var markers = [];
-            var locations = [$jsArray];
-            locations.forEach(function(loc) {
-              var marker = L.marker([loc[0], loc[1]]).addTo(map);
-              marker.bindPopup(loc[2]);
-              markers.push(marker);
-            });
+        var markers = [];
+        var locations = [$jsArray];
+        locations.forEach(function(loc) {
+          var marker = L.marker([loc[0], loc[1]]).addTo(map);
+          marker.bindPopup(loc[2]);
+          markers.push(marker);
+        });
 
-            function moveToLocation(lat, lng) {
-              map.setView([lat, lng], 16);
-            }
-          </script>
-        </body>
-        </html>
-        """.trimIndent()
+        function moveToLocation(lat, lng) {
+          map.setView([lat, lng], 16);
+        }
+      </script>
+    </body>
+    </html>
+    """.trimIndent()
     }
 
     Scaffold(
@@ -149,9 +163,13 @@ fun LocationScreen() {
                         settings.domStorageEnabled = true
                         webChromeClient = WebChromeClient()
                         webViewClient = WebViewClient()
-                        loadDataWithBaseURL(null, html, "text/html", "UTF-8", null)
 
                         webViewRef.value = this
+                    }
+                },
+                update = { webView ->
+                    html?.let {
+                        webView.loadDataWithBaseURL(null, it, "text/html", "utf-8", null)
                     }
                 },
                 modifier = Modifier.fillMaxSize()
@@ -192,12 +210,12 @@ fun LocationScreen() {
                                     selectedMarker = loc
                                     selectedInfo = loc
                                     showDialog = true
-                                    val js = "moveToLocation(${loc.lat}, ${loc.lng});"
+                                    val js = "moveToLocation(${loc.lat}, ${loc.long});"
                                     webViewRef.value?.evaluateJavascript(js, null)
                                 }
                         ) {
                             Text(
-                                text = loc.label,
+                                text = loc.namaLokasi,
                                 fontSize = 16.sp,
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)
                             )
@@ -209,10 +227,10 @@ fun LocationScreen() {
                     AlertDialog(
                         onDismissRequest = { showDialog = false },
                         title = {
-                            Text(text = selectedInfo!!.label, fontWeight = FontWeight.Bold, fontSize = 24.sp)
+                            Text(text = selectedInfo!!.namaLokasi, fontWeight = FontWeight.Bold, fontSize = 24.sp)
                         },
                         text = {
-                            Text("Alamat: ${selectedInfo!!.address}", fontSize = 20.sp)
+                            Text("Alamat: ${selectedInfo!!.alamat}", fontSize = 20.sp)
                         },
                         confirmButton = {
                             TextButton(onClick = { showDialog = false }) {

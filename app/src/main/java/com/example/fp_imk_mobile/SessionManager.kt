@@ -1,8 +1,10 @@
 package com.example.fp_imk_mobile
 
 import android.util.Log
+import com.example.fp_imk_mobile.data.Category
 import com.example.fp_imk_mobile.data.Location
 import com.example.fp_imk_mobile.data.Transaction
+import com.example.fp_imk_mobile.data.TransactionDetail
 import com.example.fp_imk_mobile.data.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
@@ -238,20 +240,60 @@ object TransactionSessionManager {
             }
     }
 
-    fun getUserTransactionList(
-        user_id: String,
-        onSuccess: (List<Transaction>) -> Unit,
-        onError: (DatabaseError) -> Unit
-    ) {
-        val dbRef = FirebaseDatabase.getInstance().getReference("transactions").child(user_id)
+    fun getUserTransactionList(user_id: String,onSuccess: (List<Transaction>) -> Unit, onError: (String) -> Unit) {
+        val dbRef = FirebaseDatabase.getInstance().getReference("transactions")
+        dbRef.get()
+            .addOnSuccessListener { snapshot ->
+                val transactionsList = mutableListOf<Transaction>()
+                for (child in snapshot.children) {
+                    val trans = child.getValue(Transaction::class.java)
+                    if (trans != null && (trans.tujuan == user_id || trans.user_id == user_id)) {
+                        val transID = child.key
+                        if (transID != null) {
+                            transactionsList.add(trans.copy(noRef = transID))
+                        }
+                    }
+                }
+                onSuccess(transactionsList)
+            }
+            .addOnFailureListener {
+                Log.e("Firebase", "Failed to retrieve transactions: ${it.message}")
+                onError("${it.message}")
+            }
+    }
+    fun getDetailsFor(transID: String, onResult: (List<TransactionDetail>) -> Unit) {
+        val dbRef = FirebaseDatabase.getInstance().getReference("transactionDetails").child(transID)
+
+        dbRef.get()
+            .addOnSuccessListener { snapshot ->
+                val detailList = mutableListOf<TransactionDetail>()
+                for (child in snapshot.children) {
+                    val detail = child.getValue(TransactionDetail::class.java)
+                    if (detail != null) {
+                        detailList.add(detail)
+                    }
+                }
+                onResult(detailList)
+            }
+            .addOnFailureListener { e ->
+                Log.e("Firebase", "Failed to get transaction details: ${e.message}")
+                onResult(emptyList())
+            }
+    }
+
+}
+
+object CategorySessionManager {
+    fun getCategoryList(onSuccess: (List<Category>) -> Unit, onError: (DatabaseError) -> Unit) {
+        val dbRef = FirebaseDatabase.getInstance().getReference("categories")
 
         dbRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                val list = mutableListOf<Transaction>()
+                val list = mutableListOf<Category>()
                 for (child in snapshot.children) {
-                    val transaction = child.getValue(Transaction::class.java)
-                    if (transaction != null) {
-                        list.add(transaction)
+                    val category = child.getValue(Category::class.java)
+                    if (category != null) {
+                        list.add(category.copy(id = child.key ?: ""))
                     }
                 }
                 onSuccess(list)
