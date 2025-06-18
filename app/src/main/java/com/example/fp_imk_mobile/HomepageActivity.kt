@@ -88,7 +88,7 @@ fun HomeScreen() {
     val auth = FirebaseAuth.getInstance()
     val uid = auth.currentUser?.uid
 
-    var user by remember {mutableStateOf<User?>(null)}
+    var user = UserSessionManager.loggedInUser
 
     val transactions = remember { mutableStateListOf<Transaction>() }
     val errorMessage = remember { mutableStateOf<String?>(null) }
@@ -108,12 +108,6 @@ fun HomeScreen() {
                     transactions.addAll(dummyTransaction)
                 }
             )
-
-            UserSessionManager.getUserData(uid) { fetchedUser ->
-                if (fetchedUser != null) {
-                    user = fetchedUser
-                }
-            }
         }
     }
 

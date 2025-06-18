@@ -26,8 +26,6 @@ import com.example.fp_imk_mobile.HomepageActivity
 import com.example.fp_imk_mobile.R
 import com.example.fp_imk_mobile.UserSessionManager
 import com.example.fp_imk_mobile.data.User
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.FirebaseDatabase
 
 class RegisterActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

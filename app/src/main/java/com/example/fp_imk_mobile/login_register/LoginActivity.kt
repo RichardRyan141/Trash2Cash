@@ -2,7 +2,6 @@ package com.example.fp_imk_mobile.login_register
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -24,8 +23,6 @@ import androidx.compose.ui.res.painterResource
 import com.example.fp_imk_mobile.HomepageActivity
 import com.example.fp_imk_mobile.R
 import com.example.fp_imk_mobile.UserSessionManager
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.FirebaseDatabase
 
 class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

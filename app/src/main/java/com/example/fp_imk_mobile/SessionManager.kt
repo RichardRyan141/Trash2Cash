@@ -93,24 +93,20 @@ object UserSessionManager {
                         return@addOnCompleteListener
                     }
 
-                    val dbRef = FirebaseDatabase.getInstance().getReference("users").child(uid)
-                    dbRef.get()
-                        .addOnSuccessListener { snapshot ->
-                            val role = snapshot.child("role").getValue(String::class.java)
-                            if (role == "user") {
-                                val userData = snapshot.getValue(User::class.java)
-                                userData!!.id = uid
-                                loggedInUser = userData
+                    getUserData(uid) { fetchedUser ->
+                        if (fetchedUser != null) {
+                            if (fetchedUser.role == "user") {
+                                loggedInUser = fetchedUser
                                 onResult(true, null)
                             } else {
                                 auth.signOut()
                                 onResult(false, "Login ini hanya untuk user")
                             }
-                        }
-                        .addOnFailureListener {
+                        } else {
                             auth.signOut()
                             onResult(false, "Gagal memverifikasi role pengguna")
                         }
+                    }
                 } else {
                     onResult(false, "Login gagal: Email atau password salah")
                 }
@@ -132,9 +128,11 @@ object UserSessionManager {
                             if (task.isSuccessful) {
                                 val firebaseUser = auth.currentUser
                                 val uid = firebaseUser?.uid ?: return@addOnCompleteListener
+                                user.id = uid
 
                                 usersRef.child(uid).setValue(user)
                                     .addOnSuccessListener {
+                                        loggedInUser = user
                                         onResult(true, null)
                                     }
                                     .addOnFailureListener {
